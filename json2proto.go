@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"regexp"
+	"reflect"
+
+	"gitter.top/common/goref"
 )
 
 type Entry struct {
@@ -67,12 +69,51 @@ func NewParser(reader io.Reader, options ...Option) (*Parser, error) {
 	return parser, nil
 }
 
-func validateFieldName(fieldName string) bool {
-
-	if len(fieldName) == 0 {
-		return false
+func (p *Parser) rangeItem(mapIter *reflect.MapIter) *Message {
+	if mapIter == nil {
+		return nil
 	}
+	var msg = &Message{SubMessage: make(map[string]*Message)}
+	for mapIter.Next() {
+		var fd = new(Entry)
+		fd.Name = mapIter.Key().String()
+		value := mapIter.Value()
+		if value.Kind() == reflect.Ptr {
+			value = value.Elem()
+		}
+		if value.Kind() == reflect.Interface {
+			value = reflect.ValueOf(value.Interface())
+		}
+		switch value.Kind() {
+		case reflect.String, reflect.Bool, reflect.Float32, reflect.Float64:
+			fd.Type = GoType2ProtoType(value.Kind())
+		case reflect.Map:
+			fd.Type = ConvertSnakeCaseToUpperCamelCase(fd.Name)
+			m := p.rangeItem(value.MapRange())
+			msg.SubMessage[fd.Type] = m
+		case reflect.Slice, reflect.Array:
+			fd.Repeated = true
+			size := value.Len()
+			if size == 0 {
+				fd.Type = "google.protobuf.Any"
+			} else {
+				vi := value.Index(0).Interface()
+				if goref.IsBasicType(vi) {
+					fd.Type = GoType2ProtoType(reflect.ValueOf(vi).Type().Kind())
+				} else {
+					fd.Type = ConvertSnakeCaseToUpperCamelCase(fd.Name)
+					m := p.rangeItem(reflect.ValueOf(vi).MapRange())
+					msg.SubMessage[fd.Type] = m
+				}
+			}
+		case reflect.Invalid:
+			fd.Type = "google.protobuf.Any"
+		default:
+			fmt.Printf("Unhandled type - key: %s, type: %s, value: %v\n",
+				fd.Name, value.Kind().String(), mapIter.Value())
+		}
 
-	re := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]*$`)
-	return re.MatchString(fieldName)
+		msg.Entries = append(msg.Entries, fd)
+	}
+	return msg
 }
