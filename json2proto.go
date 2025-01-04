@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"reflect"
 	"text/template"
 
@@ -277,4 +278,43 @@ func (p *Parser) merge(a, b *Message) ([]*Entry, error) {
 		newFields = append(newFields, field)
 	}
 	return newFields, nil
+}
+func WebHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		responseFailed(w, fmt.Errorf("method not allowed: %s", r.Method))
+		return
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		responseFailed(w, err)
+		return
+	}
+	reader := bytes.NewReader(body)
+	parser, err := NewParser(reader, WithShowFileHeader(true),
+		WithMergeMessage(true),
+		WithTiledMessage(false))
+	if err != nil {
+		responseFailed(w, err)
+		return
+	}
+
+	err = parser.Parse()
+	if err != nil {
+		responseFailed(w, err)
+		return
+	}
+	responeOK(w, parser.Output())
+}
+
+func responeOK(w http.ResponseWriter, output string) {
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("content-Type", "text/plain")
+	_, _ = w.Write([]byte(output))
+}
+
+func responseFailed(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusBadRequest)
+	w.Header().Set("content-Type", "text/plain")
+	_, _ = w.Write([]byte("bad request: " + err.Error()))
 }
