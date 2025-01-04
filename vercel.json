@@ -5,7 +5,7 @@
     { "src": "api/*.go", "use": "@vercel/go" }
   ],
   "routes": [
-    { "src": "/json2proto", "dest": "/api/convert.go" },
+    { "src": "/api/convert", "dest": "/api/convert.go" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 } 

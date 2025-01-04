@@ -143,21 +143,25 @@
 </body>
 <script>
     function xhr_get(text) {
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/api/convert", false);
-        xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8")
-        let xBody;
-        xhr.onload = () => {
-            if (xhr.readyState === 4 && xhr.status === 200) {
-                console.log(xhr.response);
-                xBody = xhr.response
-            } else {
-                console.log(`Error: ${xhr.status}`);
-                xBody = xhr.response
-            }
-        };
-        xhr.send(text);
-        return xBody
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/convert", true);  // true for async
+            xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+            
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    resolve(xhr.response);
+                } else {
+                    reject(`Error: ${xhr.status} - ${xhr.response}`);
+                }
+            };
+            
+            xhr.onerror = () => {
+                reject('Request failed');
+            };
+            
+            xhr.send(text);
+        });
     }
 
     function copy_clipboard() {
@@ -165,11 +169,16 @@
         alert("copy to clipboard success");
     }
 
-    function data_submit() {
-        let text = document.getElementById('editor').value;
-        let content = xhr_get(text);
-        document.getElementById('result').innerHTML = "<pre><code class=\"protobuf\">" + content + "</code></pre>";
-        hljs.highlightAll();
+    async function data_submit() {
+        try {
+            let text = document.getElementById('editor').value;
+            let content = await xhr_get(text);
+            document.getElementById('result').innerHTML = "<pre><code class=\"protobuf\">" + content + "</code></pre>";
+            hljs.highlightAll();
+        } catch (error) {
+            console.error(error);
+            document.getElementById('result').innerHTML = "<pre class=\"text-danger\">" + error + "</pre>";
+        }
     }
 
     function preset() {
