@@ -144,7 +144,7 @@
 <script>
     function xhr_get(text) {
         const xhr = new XMLHttpRequest();
-        xhr.open("POST", "/json2proto", false);
+        xhr.open("POST", "/api/convert", false);
         xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8")
         let xBody;
         xhr.onload = () => {
