@@ -28,12 +28,23 @@ type Parser struct {
 }
 type Option func(Parser *Parser)
 
-func WithTiledMessage(isTiled bool) Option {
+func WithTiledMessage(isTiled bool) func(parser *Parser) {
 	return func(parser *Parser) {
 		parser.TiledDefinition = isTiled
 	}
 }
 
+func WithMergeMessage(isMerge bool) func(parser *Parser) {
+	return func(parser *Parser) {
+		parser.MergeMessage = isMerge
+	}
+}
+
+func WithShowFileHeader(isShow bool) func(parser *Parser) {
+	return func(parser *Parser) {
+		parser.FileHeaderDefinition = isShow
+	}
+}
 func NewParser(reader io.Reader, options ...Option) (*Parser, error) {
 	buffer, err := io.ReadAll(reader)
 	if err != nil {
