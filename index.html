@@ -11,178 +11,318 @@
     <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.8.0/languages/protobuf.min.js"></script>
-    <link href="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.8.0/styles/github.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #000;
+            --secondary-color: #fff;
+            --accent-color: #666;
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
         body {
-            font-family: 'Fira Code', Avenir, Helvetica, Arial, sans-serif;
+            font-family: 'Fira Code', monospace;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            text-align: center;
-            color: #2c3e50;
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            line-height: 1.6;
+            padding: 2rem;
         }
 
-        table {
-            width: 100%;
-            table-layout: fixed;
+        .header {
+            margin-bottom: 2rem;
         }
 
-        th {
-            padding: 15px;
-            background: #375EAB;
-            text-align: center;
-            color: #FFF;
-            font-size: 20px;
+        .converter-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 0.8s forwards;
         }
 
-        td {
-            width: 50%;
-            vertical-align: top;
+        .converter-subtitle {
+            color: var(--accent-color);
+            margin-bottom: 3rem;
+            opacity: 0;
+            animation: fadeIn 0.8s 0.3s forwards;
         }
 
-        .copy {
-            color: #ffffff;
-            margin-left: 8px;
+        .converter-container {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            opacity: 0;
+            animation: fadeIn 0.8s 0.6s forwards;
+        }
+
+        .editor-container, .output-container {
+            flex: 1;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+
+        .editor-container:hover, .output-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .container-header {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         #editor {
             width: 100%;
-            height: 614px !important;
+            height: 600px;
+            border: none;
+            padding: 1rem;
+            font-family: 'Fira Code', monospace;
+            resize: none;
+            background: #f8f9fa;
+            transition: var(--transition);
+        }
+
+        #editor:focus {
+            outline: none;
+            background: #fff;
         }
 
         #output {
-            background-color: #e9ecef;
-            /*white-space: pre;*/
-            width: 100%;
-            height: 614px;
-            overflow: scroll;
-            tab-size: 4;
-            text-align: left;
-            padding-left: 8px;
+            height: 600px;
+            background: #1e1e1e;
+            color: #fff;
+            padding: 1rem;
+            overflow: auto;
         }
 
-        .card-body {
-            padding: 0;
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--secondary-color);
+            color: var(--secondary-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition);
         }
 
-        textarea {
-            tab-size: 4;
-            text-align: left;
+        .copy-btn:hover {
+            background: var(--secondary-color);
+            color: var(--primary-color);
         }
 
-        .text-default-placeholder {
-            color: #777;
-            font-family: "Courier New", Courier, monospace;
+        .convert-btn {
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            margin: 2rem 0;
         }
 
-        .width45 {
-            width: 45%;
+        .convert-btn:hover {
+            background: var(--accent-color);
+            transform: translateY(-2px);
         }
 
-        .width10 {
-            width: 10%;
-            font-size: 22px;
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid #eee;
+            color: var(--accent-color);
+            opacity: 0;
+            animation: fadeIn 0.8s 0.9s forwards;
         }
 
-        .width50 {
-            width: 50%;
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        footer a:hover {
+            color: var(--accent-color);
+        }
+
+        .example-link {
+            color: var(--primary-color);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Dark mode styles for the output */
+        .hljs {
+            background: #1e1e1e !important;
+            border-radius: 0 0 var(--border-radius) var(--border-radius);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .converter-container {
+                flex-direction: column;
+            }
+            
+            body {
+                padding: 1rem;
+            }
+        }
+
+        .toast-notification {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #000;
+            color: white;
+            padding: 16px 32px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            opacity: 0;
+        }
+
+        .toast-notification.show {
+            bottom: 24px;
+            opacity: 1;
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast-content svg {
+            width: 20px;
+            height: 20px;
+            stroke: #00ff00;
         }
     </style>
 </head>
 <body>
-<div class="header">
-    <table>
-        <tbody>
-        <tr>
-            <th class="width45">JSON</th>
-            <th class="width10">--></th>
-            <th class="width45">Protobuf Message<button
-                    class="copy btn btn-secondary"
-                    type="button"
-                    onclick="copy_clipboard()"
-            >Copy</button></th>
-        </tr>
-        </tbody>
-    </table>
-</div>
-
-<div id="app">
-    <table>
-        <tbody>
-        <tr>
-            <td class="width50">
-                <textarea id="editor" placeholder="Paste JSON here"></textarea>
-            </td>
-            <td class="width50">
-                <div class="card bg-light text-dark" id="output">
-                    <div class="card-body" id="result">
-                        <p class="card-text text-left mt-2 ml-3 text-default-placeholder">Protobuf Message will appear here.</p>
-                    </div>
-                </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <button type="button" onclick="data_submit()" class="btn btn-primary mt-3">Convert</button>
-</div>
-
-<footer class="mt-5 mb-3">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6 col-lg-6 col-xl-6 offset-3"><p> This tool instantly converts JSON into a Protobuf
-                Message definition. Paste a JSON structure on the left and the equivalent Protobuf Message will be
-                generated to the right, which you can paste into your program. The script has to make some
-                assumptions, so double-check the output! </p>
-                <p> Try converting JSON from the Example <a class="text-danger" onclick="preset()">DataSet</a>. </p>
-                <p> © 2024 <a href="https://xuthus.cc" target="_blank">Young Xu</a> • <a
-                        href="https://github.com/xuthus5/json2pb" target="_blank">View on GitHub</a>• <a
-                        href="https://protobuf.dev/reference/protobuf/proto3-spec" target="_blank">Protobuf Spec</a></p></div>
+    <div id="toast" class="toast-notification">
+        <div class="toast-content">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Copied to clipboard!</span>
         </div>
     </div>
-    You can find me on <a href="https://github.com/xuthus5" target="_blank">GitHub</a>.
-</footer>
-</body>
-<script>
-    function xhr_get(text) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open("POST", "/api/convert", true);  // true for async
-            xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-            
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    resolve(xhr.response);
-                } else {
-                    reject(`Error: ${xhr.status} - ${xhr.response}`);
-                }
-            };
-            
-            xhr.onerror = () => {
-                reject('Request failed');
-            };
-            
-            xhr.send(text);
-        });
-    }
 
-    function copy_clipboard() {
-        navigator.clipboard.writeText(document.getElementById('result').innerText);
-        alert("copy to clipboard success");
-    }
+    <div class="header text-center">
+        <h1 class="converter-title">JSON to Protobuf Converter</h1>
+        <p class="converter-subtitle">Convert JSON structures to Protobuf messages instantly</p>
+    </div>
 
-    async function data_submit() {
-        try {
-            let text = document.getElementById('editor').value;
-            let content = await xhr_get(text);
-            document.getElementById('result').innerHTML = "<pre><code class=\"protobuf\">" + content + "</code></pre>";
-            hljs.highlightAll();
-        } catch (error) {
-            console.error(error);
-            document.getElementById('result').innerHTML = "<pre class=\"text-danger\">" + error + "</pre>";
+    <div class="converter-container">
+        <div class="editor-container">
+            <div class="container-header">
+                <span>JSON Input</span>
+            </div>
+            <textarea id="editor" placeholder="Paste your JSON here..."></textarea>
+        </div>
+
+        <div class="output-container">
+            <div class="container-header">
+                <span>Protobuf Output</span>
+                <button class="copy-btn" onclick="copy_clipboard()">Copy</button>
+            </div>
+            <div id="output">
+                <div id="result">
+                    <p class="text-muted mt-2">Your Protobuf message will appear here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <button type="button" onclick="data_submit()" class="convert-btn">Convert</button>
+    </div>
+
+    <script>
+        function xhr_get(text) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "/api/json2proto", true);  // true for async
+                xhr.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
+                
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        resolve(xhr.response);
+                    } else {
+                        reject(`Error: ${xhr.status} - ${xhr.response}`);
+                    }
+                };
+                
+                xhr.onerror = () => {
+                    reject('Request failed');
+                };
+                
+                xhr.send(text);
+            });
         }
-    }
 
-    function preset() {
-        const dataset = `{
+        function copy_clipboard() {
+            navigator.clipboard.writeText(document.getElementById('result').innerText)
+                .then(() => {
+                    const toast = document.getElementById('toast');
+                    toast.classList.add('show');
+                    setTimeout(() => {
+                        toast.classList.remove('show');
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy:', err);
+                });
+        }
+
+        async function data_submit() {
+            try {
+                let text = document.getElementById('editor').value;
+                let content = await xhr_get(text);
+                document.getElementById('result').innerHTML = "<pre><code class=\"protobuf\">" + content + "</code></pre>";
+                hljs.highlightAll();
+            } catch (error) {
+                console.error(error);
+                document.getElementById('result').innerHTML = "<pre class=\"text-danger\">" + error + "</pre>";
+            }
+        }
+
+        function preset() {
+            const dataset = `{
   "id": 62117812,
   "node_id": "MDEwOlJlcG9zaXRvcnk2MjExNzgxMg==",
   "name": "pulsar",
@@ -322,7 +462,8 @@
   "subscribers_count": 403
 }
 `
-        document.getElementById('editor').value = dataset;
-    }
-</script>
+            document.getElementById('editor').value = dataset;
+        }
+    </script>
+</body>
 </html>
